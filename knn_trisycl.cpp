@@ -109,12 +109,12 @@ int main(int argc, char* argv[]) {
 
   queue q;
 
-  boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time(); 
+  //boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time(); 
  
   for(Img img : validation_set) correct += compute(training_buffer, img, q);
-  boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
-  boost::posix_time::time_duration msdiff = mst2 - mst1;
-  std::cout << (msdiff.total_milliseconds() / 500.0) << std::endl;
+  //boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
+  //boost::posix_time::time_duration msdiff = mst2 - mst1;
+  //std::cout << (msdiff.total_milliseconds() / 500.0) << std::endl;
   
   std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
             << " (" << correct << ")"

@@ -97,8 +97,8 @@ int compute(buffer<int>& training, const Img& img, queue& q, const kernel& k) {
 }
 
 int main(int argc, char* argv[]) {
-  std::cout << "Will use : " << (boost::compute::system::devices()).size()
-            << std::endl;
+  //  std::cout << "Will use : " << (boost::compute::system::default_device()).name()
+  //            << std::endl;
   int correct = 0;
   training_set = slurp_file("data/trainingsample.csv");
   validation_set =  slurp_file("data/validationsample.csv");
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
   //std::cout << (msdiff.total_milliseconds() / 500.0) << std::endl;
   std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
             << " (" << correct << ")"
-            << std::endl;
+	    << std::endl;
 
   return 0;
 }
