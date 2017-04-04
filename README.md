@@ -71,18 +71,20 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 | triSYCL Mode                    | Execution Time (ms)| Avg Per Image (ms) | Gain w/ Opt  |
 | :------------------------------ |:------------------:| :-----------------:| :-----------:|
 | OpenCL triSYCL (CPU)            | 2612               | 4.527              |  X           |
-| OpenCL triSYCL Optimized (CPU)  | 1016               | 1.318              |  29.11%      |
+| OpenCL triSYCL Optimized (CPU)  | 1016               | 1.318              |  -70.88%     |
 | OpenCL triSYCL (iGPU)           | 3820               | 6.726              |  X           |
-| OpenCL triSYCL Optimized (iGPU) | 1745               | 2.586              |  38.44%      |
+| OpenCL triSYCL Optimized (iGPU) | 1745               | 2.586              |  -61.55%     |
 | OpenCL triSYCL (GPU)            | 3680               | 6.106              |  X           |
-| OpenCL triSYCL Optimized (GPU)  | 1659               | 1.976              |  309.01%     |
+| OpenCL triSYCL Optimized (GPU)  | 1659               | 1.976              |  -67.63%     |
 | OpenMP triSYCL                  | 30878              | 61.164             |  X           |
-| OpenCL (GPU)                    |                    |                    |              |
-| OpenCL (iGPU)                   |                    |                    |              | 
-| OpenCL (CPU)                    |                    |                    |              |
-|                                 |                    |                    |              |
+| OpenCL (GPU)                    | 1140               | 1.054              |  -46.66%     |
+| OpenCL (iGPU)                   | 1784               | 2.300              |  -11.06%     | 
+| OpenCL (CPU)                    | 1778               | 2.319              |  75.95%      |
+                                                                                            
 
 > TODO : put a nice graph here
+
+-----------------
 
 These measurements are not meant to give an absolute and precise performance indication of triSYCL, but rather to give an idea of the improvement brought by the changes made to triSYCL and give a rough idea of the execution time we can expect for such a workload compared to pure OpenCL.  
 The measurements were made with the Unix `time` command and boost posix time module on the same computer with an i7 6700HQ, 16Gb or RAM and a GTX 960M. The code was compiled with gcc 6.3.1 under Arch Linux 64 bit.
@@ -95,13 +97,13 @@ The different triSYCL modes of the first column are  :
 * OpenCL triSYCL iGPU : Running the beignet OpenCL implementation with the **Intel® HD Graphics 530** integrated graphics of the skylake processor
 * OpenCL triSYCL GPU : Running with the Nvidia OpenCL runtime with the **GTX 960M**
 * OpenMP triSYCL : Running triSYCL without the OpenCL interoperability mode but with OpenMP
-*  OpenCL (CPU/iGPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
+* OpenCL (CPU/iGPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
 
 The next three data columns correspond to :
 
 * Execution Time : Real time in milliseconds used by the process as measured by `time %e`, this includes the time taken to process the files
 *  Avg per Image : Average time in milliseconds taken to process one image, this include the transfers to and from the device and the computing time, this is mesured with `boost::posix_time::ptime` and `boost::posix_time::time_duration`
-* Gain w/ opt : The improvement in term of speed, observed when going from the unoptimized to the optimized version of triSYCL
+* Gain w/ opt : The improvement in term of speed, observed when going from the unoptimized to the optimized version of triSYCL, exept for the pure OpenCL implementation in which the value is the improvement over the optimized triSYCL version
 
 
 #### Conclusion
