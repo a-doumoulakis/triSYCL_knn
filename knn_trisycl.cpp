@@ -39,10 +39,11 @@ buffer<int> get_buffer(const std::vector<Img>& imgs) {
 // Read a CSV-file containing image pixels
 std::vector<Img> slurp_file(const std::string& name) {
   std::ifstream infile { name, std::ifstream::in };
-  std::cout << "Loading " << name << std::endl;
+  std::cout << "Reading " << name << std::endl;
   std::string line, token;
   std::vector<Img> res;
   bool fst_1 = true;
+
   while (std::getline(infile, line)) {
     if (fst_1) {
       fst_1 = false;
