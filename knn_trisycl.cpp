@@ -67,9 +67,9 @@ std::vector<Img> slurp_file(const std::string& name) {
 int compute(buffer<int>& training, const Img& img, queue& q) {
   int res[training_set_size];
 
-  buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
-  buffer<int> B { res, training_set_size };
   {
+    buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
+    buffer<int> B { res, training_set_size };
     q.submit([&](handler &cgh) {
         auto train = training.get_access<access::mode::read>(cgh);
         auto ka = A.get_access<access::mode::read>(cgh);
@@ -87,7 +87,7 @@ int compute(buffer<int>& training, const Img& img, queue& q) {
           });
       });
   }
-  q.wait();
+
   int index = 0;
   double square = std::sqrt(res[0]);
   for(unsigned i = 1; i < training_set_size; i++){
