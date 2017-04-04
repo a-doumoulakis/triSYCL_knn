@@ -109,9 +109,10 @@ int main(int argc, char* argv[]) {
 
   auto mst2 = boost::posix_time::microsec_clock::local_time();
   auto msdiff = mst2 - mst1;
-  std::cout << (msdiff.total_milliseconds() / 500.0) << std::endl;
+  std::cout << (double { msdiff.total_milliseconds() }/validation_set.size())
+            << "ms/kernel" << std::endl;
 
-  std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
+  std::cout << "\nResult : " << (100.0*correct/validation_set.size()) << '%'
             << " (" << correct << ")"
             << std::endl;
   return 0;
