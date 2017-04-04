@@ -74,23 +74,20 @@ int compute(buffer<int>& training, const Img& img, queue& q) {
         auto train = training.get_access<access::mode::read>(cgh);
         auto ka = A.get_access<access::mode::read>(cgh);
         auto kb = B.get_access<access::mode::write>(cgh);
-        cgh.parallel_for(range<1> { 5000 }, [=] (id<1> index){
-            int diff, toAdd;
-            if (index < 5000) {
-              diff = 0;
-              for (int i = 0; i < 784; i++) {
-                toAdd = ka[i] - train[index[0] * 784 + i];
-                diff += toAdd * toAdd;
-              }
-              kb[index] = diff;
+        cgh.parallel_for(range<1> { training_set_size }, [=] (id<1> index){
+            decltype(ka)::value_type diff = 0;
+            for (auto i = 0; i != data_size; i++) {
+              auto toAdd = ka[i] - train[index[0]*data_size + i];
+              diff += toAdd*toAdd;
             }
+            kb[index] = diff;
           });
       });
   }
 
   int index = 0;
   double square = std::sqrt(res[0]);
-  for (unsigned i = 1; i < training_set_size; i++) {
+  for (auto i = 1; i != training_set_size; i++) {
     double tmp = std::sqrt(res[i]);
     if (tmp < square) {
       index = i;
