@@ -26,6 +26,7 @@ struct Img {
 
 std::vector<Img> training_set;
 std::vector<Img> validation_set;
+int result[training_set_size];
 
 // Construct a SYCL buffer from a vector of images
 buffer<int> get_buffer(const std::vector<Img>& imgs) {
@@ -69,12 +70,11 @@ std::vector<Img> slurp_file(const std::string& name) {
   return res;
 }
 
-int search_image(buffer<int>& training, const Img& img, queue& q) {
-  int res[training_set_size];
+int search_image(buffer<int>& training, buffer<int>& res_buffer,
+		 const Img& img, queue& q) {
 
   {
     buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
-    buffer<int> B { res, training_set_size };
     // Compute the L2 distance between an image and each one from the
     // training set
     q.submit([&] (handler &cgh) {
@@ -83,7 +83,7 @@ int search_image(buffer<int>& training, const Img& img, queue& q) {
         // only transfered the first time the kernel is executed.
         auto train = training.get_access<access::mode::read>(cgh);
         auto ka = A.get_access<access::mode::read>(cgh);
-        auto kb = B.get_access<access::mode::write>(cgh);
+        auto kb = res_buffer.get_access<access::mode::write>(cgh);
         // Launch a kernel with training_set_size work-items
         cgh.parallel_for(range<1> { training_set_size }, [=] (id<1> index) {
             decltype(ka)::value_type diff = 0;
@@ -95,16 +95,17 @@ int search_image(buffer<int>& training, const Img& img, queue& q) {
             kb[index] = diff;
           });
       });
-    // The destruction of B here waits for kernel execution and copy
-    // back the data to res
   }
 
+  // Wait for kernel to finish so results contains the right data
+  q.wait();
+  
   // Find the image with the minimum distance
-  auto min_image = std::min_element(std::begin(res), std::end(res));
+  auto min_image = std::min_element(std::begin(result), std::end(result));
 
   // Test if we found the good digit
   return
-    training_set[std::distance(std::begin(res), min_image)].label == img.label;
+    training_set[std::distance(std::begin(result), min_image)].label == img.label;
 }
 
 int main(int argc, char* argv[]) {
@@ -112,7 +113,8 @@ int main(int argc, char* argv[]) {
   training_set = slurp_file("data/trainingsample.csv");
   validation_set =  slurp_file("data/validationsample.csv");
   buffer<int> training_buffer = get_buffer(training_set);
-
+  buffer<int> result_buffer { result, training_set_size };
+  
   // A SYCL queue to send the heterogeneous work-load to
   queue q;
 
@@ -121,13 +123,13 @@ int main(int argc, char* argv[]) {
   // Match each image from the validation set against the images from
   // the training set
   for (auto const & img : validation_set)
-    correct += search_image(training_buffer, img, q);
+    correct += search_image(training_buffer, result_buffer, img, q);
 
   std::chrono::duration<double, std::milli> duration_ms =
     std::chrono::high_resolution_clock::now() - start_time;
 
   std::cout << (duration_ms.count()/validation_set.size())
-            << "ms/kernel" << std::endl;
+            << " ms/kernel" << std::endl;
 
   std::cout << "\nResult : " << (100.0*correct/validation_set.size()) << '%'
             << " (" << correct << ")"

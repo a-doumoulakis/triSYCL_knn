@@ -1,14 +1,13 @@
+#include <algorithm>
+#include <chrono>
+#include <fstream>
 #include <iostream>
 #include <iterator>
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <limits>
 #include <array>
-#include <cmath>
+#include <sstream>
 
-#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <CL/cl.hpp>
 
 constexpr size_t training_set_size = 5000;
@@ -23,6 +22,7 @@ struct Img {
 
 std::vector<Img> training_set;
 std::vector<Img> validation_set;
+int result[training_set_size];
 
 std::vector<int> get_vector(const std::vector<Img>& imgs) {
   std::vector<int> res;
@@ -34,8 +34,8 @@ std::vector<int> get_vector(const std::vector<Img>& imgs) {
 
 
 std::vector<Img> slurp_file(const std::string& name) {
-  std::ifstream infile(name, std::ifstream::in);
-  std::cout << "Reading " << name << std::endl;
+  std::ifstream infile { name, std::ifstream::in };
+  //std::cout << "Reading " << name << std::endl;
   std::string line, token;
   std::vector<Img> res;
   bool fst_1 = true;
@@ -46,7 +46,7 @@ std::vector<Img> slurp_file(const std::string& name) {
       continue;
     }
     Img img;
-    std::istringstream iss(line);
+    std::istringstream iss {line };
     bool fst = true;
     int index = 0;
     while(std::getline(iss, token, ',')) {
@@ -61,7 +61,7 @@ std::vector<Img> slurp_file(const std::string& name) {
     }
     res.push_back(img);
   }
-  std::cout << "Done" << std::endl;
+  //std::cout << "Done" << std::endl;
   return res;
 }
 
@@ -75,30 +75,23 @@ int compute(cl::Buffer& training, cl::Buffer& data, cl::Buffer& res,
   kern.setArg(4, 784);
 
   q.enqueueNDRangeKernel(kern, cl::NullRange, cl::NDRange(5000), cl::NullRange);
-  q.finish();
-  
-  int result[5000];
+  q.finish();  
 
   q.enqueueReadBuffer(res, CL_TRUE, 0, sizeof(int) * 5000, result);
   
-  int index = 0;
-  double square = std::sqrt(result[0]);
-  for(unsigned i = 1; i < training_set_size; i++) {
-    double tmp = std::sqrt(result[i]);
-    if(tmp < square) {
-      index = i;
-      square = tmp;
-    }
-  }
-  if(training_set[index].label == label) return 1;
-  return 0;
+  // Find the image with the minimum distance
+  auto min_image = std::min_element(std::begin(result), std::end(result));
+  
+  // Test if we found the good digit
+  return
+    training_set[std::distance(std::begin(result), min_image)].label == label;
 }
 
 
 int main(int argc, char* argv[]) {
   
-  training_set = slurp_file("../data/trainingsample.csv");
-  validation_set =  slurp_file("../data/validationsample.csv");
+  training_set = slurp_file("data/trainingsample.csv");
+  validation_set =  slurp_file("data/validationsample.csv");
   
   std::vector<cl::Platform> platform_list;
   cl::Platform::get(&platform_list);
@@ -106,7 +99,7 @@ int main(int argc, char* argv[]) {
     std::cout << "No platform found" << std::endl;
     return 1;
   }
-  cl::Platform default_platform = platform_list[0];
+  cl::Platform default_platform = platform_list[2];
 
   //std::cout << "Using " << default_platform.getInfo<CL_PLATFORM_NAME>() << std::endl;
   //std::cout << "Size " << platform_list.size() << std::endl;
@@ -119,9 +112,11 @@ int main(int argc, char* argv[]) {
   }
   cl::Device default_device = device_list[0];
 
-  //std::cout << "Using " << default_device.getInfo<CL_DEVICE_NAME>() << std::endl;
+  std::cout << "\nUsing " << default_device.getInfo<CL_DEVICE_NAME>() << std::endl;
   //std::cout << "Size " << device_list.size() << std::endl;
   
+  std::cout << std::endl;
+
   cl::Context ctx({ default_device });
 
   cl::Program::Sources src;
@@ -165,8 +160,8 @@ int main(int argc, char* argv[]) {
 		       sizeof(int) * train_vect.size(), train_vect.data());
   int correct = 0;
 
-  //boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time(); 
-
+  auto start_time = std::chrono::high_resolution_clock::now();
+  
   for(Img img : validation_set) {
   
     q.enqueueWriteBuffer(data, CL_TRUE, 0,
@@ -175,10 +170,14 @@ int main(int argc, char* argv[]) {
     
     correct += compute(training, data, res, q, kernel, img.label);
   }
-  
-  //boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
-  //boost::posix_time::time_duration msdiff = mst2 - mst1;
-  //std::cout << (msdiff.total_milliseconds() / 500.0) << std::endl;
+
+  std::chrono::duration<double, std::milli> duration_ms =
+    std::chrono::high_resolution_clock::now() - start_time;
+
+  std::cout << (duration_ms.count()/validation_set.size())
+            << " ms/kernel" << std::endl;
+
+
   std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
             << " (" << correct << ")"
 	    << std::endl;

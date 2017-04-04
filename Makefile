@@ -1,7 +1,7 @@
 CC=g++ -Wall -std=c++1y
 
 GCCL=/usr/lib/gcc/x86_64-linux-gnu/6.2.0/include
-SYCL=/home/archon/Documents/triSYCL/include
+SYCL=/home/archon/Documents/Xilinx/triSYCL/include
 
 all: knn_opencl knn_trisycl knn_pure_opencl
 
