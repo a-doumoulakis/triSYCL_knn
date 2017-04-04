@@ -1,9 +1,9 @@
+#include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <iterator>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <limits>
 
 #include <boost/compute.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -64,17 +64,18 @@ std::vector<Img> slurp_file(const std::string& name) {
   return res;
 }
 
-int compute(buffer<int>& training, const Img& img, queue& q) {
+int search_image(buffer<int>& training, const Img& img, queue& q) {
   int res[training_set_size];
 
   {
     buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
     buffer<int> B { res, training_set_size };
-    q.submit([&](handler &cgh) {
+    // Compute the L2 distance between of an image against the training set
+    q.submit([&] (handler &cgh) {
         auto train = training.get_access<access::mode::read>(cgh);
         auto ka = A.get_access<access::mode::read>(cgh);
         auto kb = B.get_access<access::mode::write>(cgh);
-        cgh.parallel_for(range<1> { training_set_size }, [=] (id<1> index){
+        cgh.parallel_for(range<1> { training_set_size }, [=] (id<1> index) {
             decltype(ka)::value_type diff = 0;
             for (auto i = 0; i != data_size; i++) {
               auto toAdd = ka[i] - train[index[0]*data_size + i];
@@ -85,17 +86,12 @@ int compute(buffer<int>& training, const Img& img, queue& q) {
       });
   }
 
-  int index = 0;
-  double square = std::sqrt(res[0]);
-  for (auto i = 1; i != training_set_size; i++) {
-    double tmp = std::sqrt(res[i]);
-    if (tmp < square) {
-      index = i;
-      square = tmp;
-    }
-  }
-  if (training_set[index].label == img.label) return 1;
-  return 0;
+  // Find the image with the minimum distance
+  auto min_image = std::min_element(std::begin(res), std::end(res));
+
+  // Test if we found the good digit
+  return
+    training_set[std::distance(std::begin(res), min_image)].label == img.label;
 }
 
 int main(int argc, char* argv[]) {
@@ -106,13 +102,13 @@ int main(int argc, char* argv[]) {
 
   queue q;
 
-  boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time(); 
+  auto mst1 = boost::posix_time::microsec_clock::local_time();
 
-  for (Img img : validation_set)
-    correct += compute(training_buffer, img, q);
+  for (auto const & img : validation_set)
+    correct += search_image(training_buffer, img, q);
 
-  boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
-  boost::posix_time::time_duration msdiff = mst2 - mst1;
+  auto mst2 = boost::posix_time::microsec_clock::local_time();
+  auto msdiff = mst2 - mst1;
   std::cout << (msdiff.total_milliseconds() / 500.0) << std::endl;
 
   std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
