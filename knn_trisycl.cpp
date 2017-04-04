@@ -1,12 +1,10 @@
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
 #include <vector>
-
-#include <boost/compute.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <CL/sycl.hpp>
 
@@ -102,14 +100,15 @@ int main(int argc, char* argv[]) {
 
   queue q;
 
-  auto mst1 = boost::posix_time::microsec_clock::local_time();
+  auto start_time = std::chrono::high_resolution_clock::now();
 
   for (auto const & img : validation_set)
     correct += search_image(training_buffer, img, q);
 
-  auto mst2 = boost::posix_time::microsec_clock::local_time();
-  auto msdiff = mst2 - mst1;
-  std::cout << (double { msdiff.total_milliseconds() }/validation_set.size())
+  std::chrono::duration<double, std::milli> duration_ms =
+    std::chrono::high_resolution_clock::now() - start_time;
+
+  std::cout << (duration_ms.count()/validation_set.size())
             << "ms/kernel" << std::endl;
 
   std::cout << "\nResult : " << (100.0*correct/validation_set.size()) << '%'
