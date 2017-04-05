@@ -70,16 +70,16 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 #### Numbers
 | triSYCL Mode                    | Execution Time (ms)| Avg Per Image (ms) | Gain w/ Opt  |
 | :------------------------------ |:------------------:| :-----------------:| :-----------:|
-| OpenCL triSYCL (CPU)            | 2612               | 4.527              |  X           |
-| OpenCL triSYCL Optimized (CPU)  | 1016               | 1.318              |  -70.88%     |
-| OpenCL triSYCL (iGPU)           | 3820               | 6.726              |  X           |
-| OpenCL triSYCL Optimized (iGPU) | 1745               | 2.586              |  -61.55%     |
-| OpenCL triSYCL (GPU)            | 3680               | 6.106              |  X           |
-| OpenCL triSYCL Optimized (GPU)  | 1659               | 1.976              |  -67.63%     |
-| OpenMP triSYCL                  | 30878              | 61.164             |  X           |
-| OpenCL (GPU)                    | 1140               | 1.054              |  -46.66%     |
-| OpenCL (iGPU)                   | 1784               | 2.300              |  -11.06%     | 
-| OpenCL (CPU)                    | 1778               | 2.319              |  75.95%      |
+| OpenCL triSYCL (CPU)            |                    | 4.055              |  X           |
+| OpenCL triSYCL Optimized (CPU)  |                    | 1.347              |  -66.8%      |
+| OpenCL triSYCL (iGPU)           |                    | 7.079              |  X           |
+| OpenCL triSYCL Optimized (iGPU) |                    | 2.603              |  -63.2%      |
+| OpenCL triSYCL (GPU)            |                    | 6.581              |  X           |
+| OpenCL triSYCL Optimized (GPU)  |                    | 1.748              |  -73.4%      |
+| OpenMP triSYCL                  |                    | 61.164             |  X           |
+| OpenCL (CPU)                    |                    | 0.612              |  -42.4%      |
+| OpenCL (iGPU)                   |                    | 2.252              |  -13.5%      | 
+| OpenCL (GPU)                    |                    | 1.006              |  -54.6%      |
                                                                                             
 
 > TODO : put a nice graph here
