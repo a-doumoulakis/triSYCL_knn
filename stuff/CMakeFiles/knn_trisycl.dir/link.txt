@@ -1,0 +1,1 @@
+/usr/bin/clang++    -Wall -g   CMakeFiles/knn_trisycl.dir/knn_trisycl.cpp.o  -o knn_trisycl -Wl,-rpath,/home/archon/Documents/ComputeCpp-CE-0.1.3-Linux/lib -rdynamic /home/archon/Documents/ComputeCpp-CE-0.1.3-Linux/lib/libComputeCpp.so -lOpenCL 

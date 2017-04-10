@@ -16,6 +16,7 @@ using namespace cl::sycl;
 
 constexpr size_t training_set_size = 5000;
 constexpr size_t pixel_number = 784;
+range<1> global_size {5000};
 
 using Vector = std::array<int, pixel_number>;
 
@@ -90,7 +91,7 @@ int search_image(buffer<int>& training, buffer<int>& res,
                      res.get_access<access::mode::write>(cgh),
                      int { training_set_size }, int { pixel_number });
         // Launch the kernel with training_set_size work-items
-        cgh.parallel_for(training_set_size, k);
+        cgh.parallel_for(global_size, k);
       });
   }
 
@@ -106,7 +107,7 @@ int search_image(buffer<int>& training, buffer<int>& res,
 }
 
 int main(int argc, char* argv[]) {
-  int correct = 0;
+  //int correct = 0;
   training_set = slurp_file("data/trainingsample.csv");
   validation_set =  slurp_file("data/validationsample.csv");
   buffer<int> training_buffer = get_buffer(training_set);
@@ -153,22 +154,31 @@ int main(int argc, char* argv[]) {
   // Construct a SYCL kernel from OpenCL kernel to be used in
   // interoperability mode
   kernel k { boost::compute::kernel { program, "kernel_compute"} };
-
-  auto start_time = std::chrono::high_resolution_clock::now();
-
+  
+  double sum = 0.0;
+  
+  for(int h = 1; h <= 200; h++){
+    auto start_time = std::chrono::high_resolution_clock::now();
+  
   // Match each image from the validation set against the images from
   // the training set
-  for (auto const & img : validation_set)
-    correct += search_image(training_buffer, result_buffer, img, q, k);
+  //for (auto const & img : validation_set)
+    for(int i = 0; i < 500; i++)
+      search_image(training_buffer, result_buffer, validation_set[i], q, k);
 
-  std::chrono::duration<double, std::milli> duration_ms =
-    std::chrono::high_resolution_clock::now() - start_time;
+    std::chrono::duration<double, std::milli> duration_ms =
+      std::chrono::high_resolution_clock::now() - start_time;
 
-  std::cout << (duration_ms.count()/validation_set.size())
-            << " ms/kernel" << std::endl;
-
-  std::cout << "\nResult : " << (100.0*correct/validation_set.size()) << '%'
-            << " (" << correct << ")"
-            << std::endl;
+    sum += (duration_ms.count()/500); 
+  //std::cout << (duration_ms.count()/validation_set.size())
+  //          << " ms/kernel" << std::endl;
+    //if(sum/h > last){
+    std::cout << h/2.0 << "%" << " avg : " << (sum/h) << std::endl;
+      //}
+  }
+  std::cout << "AVERAGE : " << (sum/1000) << std::endl;
+  //std::cout << "\nResult : " << (100.0*correct/validation_set.size()) << '%'
+  //          << " (" << correct << ")"
+  //          << std::endl;
   return 0;
 }

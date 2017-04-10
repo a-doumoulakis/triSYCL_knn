@@ -18,6 +18,8 @@ constexpr size_t pixel_number = 784;
 
 using Vector = std::array<int, pixel_number>;
 
+class KnnKernel;
+
 struct Img {
   // The digit value [0-9] represented on the image
   int label;
@@ -78,6 +80,8 @@ int search_image(buffer<int>& training, buffer<int>& res_buffer,
     buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
     // Compute the L2 distance between an image and each one from the
     // training set
+
+    try{
     q.submit([&] (handler &cgh) {
         // These accessors lazily trigger data transfers between host
         // and device only if necessary. For example "training" is
@@ -86,7 +90,7 @@ int search_image(buffer<int>& training, buffer<int>& res_buffer,
         auto ka = A.get_access<access::mode::read>(cgh);
         auto kb = res_buffer.get_access<access::mode::write>(cgh);
         // Launch a kernel with training_set_size work-items
-        cgh.parallel_for(range<1> { training_set_size }, [=] (id<1> index) {
+        cgh.parallel_for<class KnnKernel>(range<1> { training_set_size }, [=] (id<1> index) {
             decltype(ka)::value_type diff = 0;
             // For each pixel
             for (auto i = 0; i != pixel_number; i++) {
@@ -96,6 +100,10 @@ int search_image(buffer<int>& training, buffer<int>& res_buffer,
             kb[index] = diff;
           });
       });
+    } catch(cl::sycl::cl_exception ex){
+      std::cout << ex.get_cl_error_message() << std::endl;
+      exit(1);
+    }
   }
 
   // Wait for kernel to finish so results contains the right data

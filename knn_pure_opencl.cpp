@@ -158,29 +158,35 @@ int main(int argc, char* argv[]) {
   
   q.enqueueWriteBuffer(training, CL_TRUE, 0,
 		       sizeof(int) * train_vect.size(), train_vect.data());
-  int correct = 0;
+  //int correct = 0;
+  double sum = 0.0;
 
-  auto start_time = std::chrono::high_resolution_clock::now();
+  for(int h = 1; h <= 1000; h++){
   
-  for(Img img : validation_set) {
+    auto start_time = std::chrono::high_resolution_clock::now();
   
-    q.enqueueWriteBuffer(data, CL_TRUE, 0,
-			 sizeof(int) * img.pixels.size(),
-			 img.pixels.data());
+    for(Img img : validation_set) {
+      q.enqueueWriteBuffer(data, CL_TRUE, 0,
+			   sizeof(int) * img.pixels.size(),
+			   img.pixels.data());
+      compute(training, data, res, q, kernel, img.label);
+    }
     
-    correct += compute(training, data, res, q, kernel, img.label);
+    std::chrono::duration<double, std::milli> duration_ms =
+      std::chrono::high_resolution_clock::now() - start_time;
+
+    sum += (duration_ms.count()/500); 
+    std::cout << h/10.0 << "%" << " avg : " << (sum/h) << std::endl;
   }
-
-  std::chrono::duration<double, std::milli> duration_ms =
-    std::chrono::high_resolution_clock::now() - start_time;
-
-  std::cout << (duration_ms.count()/validation_set.size())
-            << " ms/kernel" << std::endl;
+  std::cout << "AVERAGE : " << (sum/1000) << std::endl;
+  
+  //std::cout << (duration_ms.count()/validation_set.size())
+  //          << " ms/kernel" << std::endl;
 
 
-  std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
-            << " (" << correct << ")"
-	    << std::endl;
+  //std::cout << "\nResult : " << ((correct / 500.0) * 100.0) << "%"
+  //          << " (" << correct << ")"
+  //	    << std::endl;
   
   return 0;
 }

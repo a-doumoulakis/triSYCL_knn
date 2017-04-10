@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/archon/Documents/Xilinx/triSYCL_knn
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # Special rule for the target test
 test:
@@ -91,14 +91,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/archon/Documents/Xilinx/triSYCL_knn/CMakeFiles /home/archon/Documents/Xilinx/triSYCL_knn/CMakeFiles/progress.marks
-	$(MAKE) -f CMakeFiles/Makefile2 all
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(CMAKE_COMMAND) -E cmake_progress_start /home/archon/Documents/Xilinx/triSYCL_knn/CMakeFiles /home/archon/Documents/Xilinx/triSYCL_knn/stuff/CMakeFiles/progress.marks
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f CMakeFiles/Makefile2 stuff/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/archon/Documents/Xilinx/triSYCL_knn/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	$(MAKE) -f CMakeFiles/Makefile2 clean
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f CMakeFiles/Makefile2 stuff/clean
 .PHONY : clean
 
 # The main clean target
@@ -108,44 +108,75 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	$(MAKE) -f CMakeFiles/Makefile2 preinstall
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f CMakeFiles/Makefile2 stuff/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	$(MAKE) -f CMakeFiles/Makefile2 preinstall
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f CMakeFiles/Makefile2 stuff/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
-#=============================================================================
-# Target rules for targets named knn_trisycl_knn_trisycl.cpp_0_integration_header
+# Convenience name for target.
+stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/rule:
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f CMakeFiles/Makefile2 stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/rule
+.PHONY : stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/rule
 
-# Build rule for target.
-knn_trisycl_knn_trisycl.cpp_0_integration_header: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 knn_trisycl_knn_trisycl.cpp_0_integration_header
+# Convenience name for target.
+knn_trisycl_knn_trisycl.cpp_0_integration_header: stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/rule
+
 .PHONY : knn_trisycl_knn_trisycl.cpp_0_integration_header
 
 # fast build rule for target.
 knn_trisycl_knn_trisycl.cpp_0_integration_header/fast:
-	$(MAKE) -f stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/build.make stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/build
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/build.make stuff/CMakeFiles/knn_trisycl_knn_trisycl.cpp_0_integration_header.dir/build
 .PHONY : knn_trisycl_knn_trisycl.cpp_0_integration_header/fast
 
-#=============================================================================
-# Target rules for targets named knn_trisycl
+# Convenience name for target.
+stuff/CMakeFiles/knn_trisycl.dir/rule:
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f CMakeFiles/Makefile2 stuff/CMakeFiles/knn_trisycl.dir/rule
+.PHONY : stuff/CMakeFiles/knn_trisycl.dir/rule
 
-# Build rule for target.
-knn_trisycl: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 knn_trisycl
+# Convenience name for target.
+knn_trisycl: stuff/CMakeFiles/knn_trisycl.dir/rule
+
 .PHONY : knn_trisycl
 
 # fast build rule for target.
 knn_trisycl/fast:
-	$(MAKE) -f stuff/CMakeFiles/knn_trisycl.dir/build.make stuff/CMakeFiles/knn_trisycl.dir/build
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f stuff/CMakeFiles/knn_trisycl.dir/build.make stuff/CMakeFiles/knn_trisycl.dir/build
 .PHONY : knn_trisycl/fast
+
+knn_trisycl.o: knn_trisycl.cpp.o
+
+.PHONY : knn_trisycl.o
+
+# target to build an object file
+knn_trisycl.cpp.o:
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f stuff/CMakeFiles/knn_trisycl.dir/build.make stuff/CMakeFiles/knn_trisycl.dir/knn_trisycl.cpp.o
+.PHONY : knn_trisycl.cpp.o
+
+knn_trisycl.i: knn_trisycl.cpp.i
+
+.PHONY : knn_trisycl.i
+
+# target to preprocess a source file
+knn_trisycl.cpp.i:
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f stuff/CMakeFiles/knn_trisycl.dir/build.make stuff/CMakeFiles/knn_trisycl.dir/knn_trisycl.cpp.i
+.PHONY : knn_trisycl.cpp.i
+
+knn_trisycl.s: knn_trisycl.cpp.s
+
+.PHONY : knn_trisycl.s
+
+# target to generate assembly for a file
+knn_trisycl.cpp.s:
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(MAKE) -f stuff/CMakeFiles/knn_trisycl.dir/build.make stuff/CMakeFiles/knn_trisycl.dir/knn_trisycl.cpp.s
+.PHONY : knn_trisycl.cpp.s
 
 # Help Target
 help:
@@ -153,11 +184,14 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... test"
+	@echo "... rebuild_cache"
 	@echo "... knn_trisycl_knn_trisycl.cpp_0_integration_header"
 	@echo "... knn_trisycl"
+	@echo "... test"
+	@echo "... knn_trisycl.o"
+	@echo "... knn_trisycl.i"
+	@echo "... knn_trisycl.s"
 .PHONY : help
 
 
@@ -169,6 +203,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/archon/Documents/Xilinx/triSYCL_knn && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
