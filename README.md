@@ -68,12 +68,14 @@ To prevent unneeded transfers from happening, a caching mechanism was implemente
 In this part we show the results obtained with different triSYCL modes and OpenCL runtimes.
 
 #### Numbers
-| triSYCL Mode                    | Execution Time (ms)| Avg Per Image (ms) | Gain w/ Opt  |
-| :------------------------------ |:------------------:| :-----------------:| :-----------:|
-| OpenCL triSYCL Optimized (CPU)  |                    | 0.6                |              |
-| ComputeCPP (CPU                 |                    | 0.8                |              | 
-| OpenMP triSYCL                  |                    | 40                 |              |
-| OpenCL (CPU)                    |                    | 0.4                |              |
+| triSYCL Mode                    | Avg Per Image (ms) |
+| :------------------------------ |:------------------:|
+| OpenMP triSYCL                  | 60                 |
+| ComputeCPP          (CPU)       | 1.0                |
+| OpenCL triSYCL      (CPU)       | 1.0                |
+| OpenCL              (CPU)       | 0.6                |  
+| OpenCL triSYCL      (GPU)       | 1.7                |
+| OpenCL              (GPU)       | 1.3                |
                                                                                             
 
 > TODO : put a nice graph here
@@ -85,17 +87,14 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 The different triSYCL modes of the first column are  :
 
 * OpenCL triSYCL CPU : Running the Intel OpenCL runtime with the **i7-6700HQ**
-* OpenCL triSYCL iGPU : Running the beignet OpenCL implementation with the **Intel® HD Graphics 530** integrated graphics of the skylake processor
 * OpenCL triSYCL GPU : Running with the Nvidia OpenCL runtime with the **GTX 960M**
+* ComputeCPP : Running the same kernel that ran with *triSYCL OpenMP* but with compute CPP on the CPU
 * OpenMP triSYCL : Running triSYCL without the OpenCL interoperability mode but with OpenMP
-* OpenCL (CPU/iGPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
+* OpenCL (CPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
 
 The next three data columns correspond to :
 
-* Execution Time : Real time in milliseconds used by the process as measured by `time %e`, this includes the time taken to process the files
-*  Avg per Image : Average time in milliseconds taken to process one image, this include the transfers to and from the device and the computing time, this is mesured with `boost::posix_time::ptime` and `boost::posix_time::time_duration`
-* Gain w/ opt : The improvement in term of speed, observed when going from the unoptimized to the optimized version of triSYCL, exept for the pure OpenCL implementation in which the value is the improvement over the optimized triSYCL version
-
+*  Avg per Image : Average time in milliseconds taken to process one image, this include the transfers to and from the device and the computing time
 
 #### Conclusion
 
