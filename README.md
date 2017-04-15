@@ -70,24 +70,15 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 #### Numbers
 | triSYCL Mode                    | Execution Time (ms)| Avg Per Image (ms) | Gain w/ Opt  |
 | :------------------------------ |:------------------:| :-----------------:| :-----------:|
-| OpenCL triSYCL (CPU)            |                    | 4.055              |  X           |
-| OpenCL triSYCL Optimized (CPU)  |                    | 1.347              | -66.8%       |
-| OpenCL triSYCL (iGPU)           |                    | 7.079              |  X           |
-| OpenCL triSYCL Optimized (iGPU) |                    | 2.603              | -63.2%       |
-| OpenCL triSYCL (GPU)            |                    | 6.581              |  X           |
-| OpenCL triSYCL Optimized (GPU)  |                    | 1.748              | -73.4%       |
-| OpenMP triSYCL                  |                    | 61.16              |  X           |
-| OpenCL (GPU)                    |                    | 1.006              | -42.4%       |
-| OpenCL (iGPU)                   |                    | 2.252              | -13.5%       | 
-| OpenCL (CPU)                    |                    | 0.612              | -54.6%       |
+| OpenCL triSYCL Optimized (CPU)  |                    | 0.6                |              |
+| ComputeCPP (CPU                 |                    | 0.8                |              | 
+| OpenMP triSYCL                  |                    | 40                 |              |
+| OpenCL (CPU)                    |                    | 0.4                |              |
                                                                                             
 
 > TODO : put a nice graph here
 
 -----------------
-
-These measurements are not meant to give an absolute and precise performance indication of triSYCL, but rather to give an idea of the improvement brought by the changes made to triSYCL and give a rough idea of the execution time we can expect for such a workload compared to pure OpenCL.  
-The measurements were made with the Unix `time` command and boost posix time module on the same computer with an i7 6700HQ, 16Gb or RAM and a GTX 960M. The code was compiled with gcc 6.3.1 under Arch Linux 64 bit.
 
 #### Explanations
 
