@@ -1,18 +1,28 @@
-CC=g++ -Wall -std=c++1y
+CC=g++ -Wall -O3 -std=c++1y -g
 
-GCCL=/usr/lib/gcc/x86_64-linux-gnu/6.2.0/include
-SYCL=/home/archon/Documents/Xilinx/triSYCL/include
+SYCL=/home/anastasi/Documents/Development/triSYCL/include
+SYCL_OPT= -DNDEBUG -DBOOST_DISABLE_ASSERTS -fpermissive
+OMP= -fopenmp
 
-all: knn_opencl knn_trisycl knn_pure_opencl
+all: test knn_opencl
+
+test: clean knn_trisycl_opencl_ASYNC knn_trisycl_opencl_NOASYNC knn_trisycl_openmp_ASYNC knn_trisycl_openmp_NOASYNC
+
+knn_trisycl_opencl_ASYNC: knn_trisycl_opencl_interop.cpp
+	$(CC) $(SYCL_OPT) -DTRISYCL_OPENCL $(OMP) -I$(SYCL) $< -o $@ -lOpenCL
+knn_trisycl_opencl_NOASYNC: knn_trisycl_opencl_interop.cpp
+	$(CC) $(SYCL_OPT) -DTRISYCL_NO_ASYNC -DTRISYCL_OPENCL $(OMP) -I$(SYCL) $< -o $@ -lOpenCL
+
+knn_trisycl_openmp_ASYNC: knn_trisycl_openmp.cpp
+	$(CC) $(SYCL_OPT) $(OMP) -I$(SYCL) $< -o $@
+knn_trisycl_openmp_NOASYNC: knn_trisycl_openmp.cpp
+	$(CC) $(SYCL_OPT) -DTRISYCL_NO_ASYNC $(OMP) -I$(SYCL) $< -o $@
 
 knn_opencl: knn_opencl.cpp
-	$(CC) -DTRISYCL_OPENCL -I$(SYCL) -fopenmp $< -o $@ -lOpenCL
-
-knn_trisycl: knn_trisycl.cpp
-	$(CC) -I$(SYCL) -fopenmp $< -o $@
-
-knn_pure_opencl: knn_pure_opencl.cpp
 	$(CC) $< -o $@ -lOpenCL
 
+knn_trisycl_openmp: knn_trisycl_openmp.cpp
+	$(CC) $(SYCL_OPT) -fpermissive $(OMP) -I$(SYCL) -o $@
+
 clean:
-	rm -f knn_trisycl knn_opencl knn_pure_opencl
+	rm -f knn_opencl *ASYNC

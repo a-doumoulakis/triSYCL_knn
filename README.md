@@ -47,7 +47,7 @@ cgh.set_args(training.get_access<access::mode::read>(cgh),
              B.get_access<access::mode::write>(cgh),
              5000, 784);
 ```
-To launch the kernel we simply call ` cgh.parallel_for(5000, k);`, the first argument is the number of parallel threads that will be running and the second is a reference to `cl::sycl::kernel`.
+To launch the kernel we simply call ` cgh.parallel_for(5000, k);`, the first argument is the number of parallel threads that will be running and the second is a reference to `cl::sycl::   kernel`.
 > We can also give a `cl::sycl::range<N>` as a first argument to `parallel_for` to indicate a custom N-D range and work group size for the kernel execution.
 
 To be sure we read the result when the computation has ended we call `q.wait()` which will return only once all the previous commands present in the queue have been executed, making it a synchronization point.
@@ -68,43 +68,77 @@ To prevent unneeded transfers from happening, a caching mechanism was implemente
 In this part we show the results obtained with different triSYCL modes and OpenCL runtimes.
 
 #### Numbers
-| triSYCL Mode                    | Execution Time (ms)| Avg Per Image (ms) | Gain w/ Opt  |
-| :------------------------------ |:------------------:| :-----------------:| :-----------:|
-| OpenCL triSYCL (CPU)            |                    | 4.055              |  X           |
-| OpenCL triSYCL Optimized (CPU)  |                    | 1.347              |  -66.8%      |
-| OpenCL triSYCL (iGPU)           |                    | 7.079              |  X           |
-| OpenCL triSYCL Optimized (iGPU) |                    | 2.603              |  -63.2%      |
-| OpenCL triSYCL (GPU)            |                    | 6.581              |  X           |
-| OpenCL triSYCL Optimized (GPU)  |                    | 1.748              |  -73.4%      |
-| OpenMP triSYCL                  |                    | 61.164             |  X           |
-| OpenCL (CPU)                    |                    | 0.612              |  -42.4%      |
-| OpenCL (iGPU)                   |                    | 2.252              |  -13.5%      | 
-| OpenCL (GPU)                    |                    | 1.006              |  -54.6%      |
-                                                                                            
+| triSYCL Mode                    | Avg Per Image (ms) gcc | Avg Per Image (ms) clang |
+| :------------------------------ |:----------------------:|:------------------------:|
+| OpenMP triSYCL                  | 0.99                   | 0.75                     |
+| OpenMP triSYCL NOASYNC          | 0.75                   | 0.43                     |
+| ComputeCPP                (CPU) | 0.77                   | ????                     |
+| OpenCL triSYCL            (CPU) | 0.48                   | 0.47                     |
+| OpenCL triSYCL NOASYNC    (CPU) | 0.44                   | 0.44                     |
+| OpenCL                    (CPU) | 0.42                   | 0.42                     |
+| OpenCL triSYCL            (GPU) |                        |                          |
+| OpenCL                    (GPU) |                        |                          |
 
 > TODO : put a nice graph here
 
 -----------------
-
-These measurements are not meant to give an absolute and precise performance indication of triSYCL, but rather to give an idea of the improvement brought by the changes made to triSYCL and give a rough idea of the execution time we can expect for such a workload compared to pure OpenCL.  
-The measurements were made with the Unix `time` command and boost posix time module on the same computer with an i7 6700HQ, 16Gb or RAM and a GTX 960M. The code was compiled with gcc 6.3.1 under Arch Linux 64 bit.
 
 #### Explanations
 
 The different triSYCL modes of the first column are  :
 
 * OpenCL triSYCL CPU : Running the Intel OpenCL runtime with the **i7-6700HQ**
-* OpenCL triSYCL iGPU : Running the beignet OpenCL implementation with the **Intel® HD Graphics 530** integrated graphics of the skylake processor
 * OpenCL triSYCL GPU : Running with the Nvidia OpenCL runtime with the **GTX 960M**
+* ComputeCPP : Running the same kernel that ran with *triSYCL OpenMP* but with compute CPP on the CPU
 * OpenMP triSYCL : Running triSYCL without the OpenCL interoperability mode but with OpenMP
-* OpenCL (CPU/iGPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
+* OpenCL (CPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
+* NOASYNC: Disable asynchronous execution of kernels
 
 The next three data columns correspond to :
 
-* Execution Time : Real time in milliseconds used by the process as measured by `time %e`, this includes the time taken to process the files
-*  Avg per Image : Average time in milliseconds taken to process one image, this include the transfers to and from the device and the computing time, this is mesured with `boost::posix_time::ptime` and `boost::posix_time::time_duration`
-* Gain w/ opt : The improvement in term of speed, observed when going from the unoptimized to the optimized version of triSYCL, exept for the pure OpenCL implementation in which the value is the improvement over the optimized triSYCL version
+*  Avg per Image : Average time in milliseconds taken to process one image, this include the transfers to and from the device and the computing time
 
+#### About synchronous execution
+
+As we have seen with the performance comparison on the knn example,
+further improvement can be made to triSYCL to get better performance
+both with the OpenCL interoperability mode and with OpenMP parallelism.
+
+In the knn example, we execute a great number of small kernels
+(one kernel for each image in the reference set, 500 kernels in total,
+with each execution of a kernel taking less than 1ms),
+this has highlighted a performance inefficiency in triSYCL.
+
+The current way to add a task in the asynchronous task graph in triSYCL,
+is for the main thread to create a new thread for each task,
+and then detach it. The new thread will launch the kernel and synchronize by
+its own means, so there is no need for the main thread to monitor
+its execution. The problem comes when, just like in our example,
+the number of tasks is great and the execution time of each task is small.
+We can come across situations when we spend more time creating threads
+than actually executing them.
+
+We ran the example with Intel's OpenCL implementation on CPU that uses TBB
+as a backed. With Intel VTune can we profile the execution and we observe
+that Intel's OpenCL runtime creates 7 TBB worker threads that will execute
+the kernels, meanwhile the main triSYCL thread will, for each kernel execution,
+create a thread that will launch the computation of the kernel on the
+TBB worker threads. We end up creating more than 500 threads during the
+execution of the example with most of these threads delegating the computation
+to the TBB workers and doing very little work themselves.
+
+This issue is highlighted even more when using OpenMP. Instead of just using
+a pool of existing threads to make the computation, OpenMP creates 8 threads
+to execute the workgroups for every execution of a kernel. Again, similarly to
+the OpenCL case we create many threads that have a very short lifespan,
+for the execution of 500 kernels, 4000 threads are created.
+
+The solution to this problem is straight forward, there need to be a way to
+reuse threads instead of creating them when possible. This can be achieved
+by using a thread pool or a similar mechanism that allows us to assign a task
+to an existing thread and monitor the tasks with futures and promises.
+Doing that will greatly decrease the amount of time spent creating and
+synchronizing the threads between them.
 
 #### Conclusion
 
