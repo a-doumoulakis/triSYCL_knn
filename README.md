@@ -72,7 +72,7 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 | :------------------------------ |:----------------------:|:------------------------:|
 | OpenMP triSYCL                  | 0.99                   | 0.75                     |
 | OpenMP triSYCL NOASYNC          | 0.75                   | 0.43                     |
-| ComputeCPP                (CPU) | 0.77                   | ????                     |
+| ComputeCPP                (CPU) | 0.77                   | compilation fail         |
 | OpenCL triSYCL            (CPU) | 0.48                   | 0.47                     |
 | OpenCL triSYCL NOASYNC    (CPU) | 0.44                   | 0.44                     |
 | OpenCL                    (CPU) | 0.42                   | 0.42                     |
@@ -83,13 +83,20 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 
 -----------------
 
-#### Explanations
+#### Software Stack
+
+OS : Ubuntu 16.10
+gcc : 6.2.0
+clang : 3.8.1
+computecpp : 0.1.3 CE (fail to compile with 0.2.0 CE)
+OpenCL : Intel OpenCL runtime 4.0.25 and Intel OpenCL SDK
+
+#### Descpription
 
 The different triSYCL modes of the first column are  :
 
-* OpenCL triSYCL CPU : Running the Intel OpenCL runtime with the **i7-6700HQ**
-* OpenCL triSYCL GPU : Running with the Nvidia OpenCL runtime with the **GTX 960M**
-* ComputeCPP : Running the same kernel that ran with *triSYCL OpenMP* but with compute CPP on the CPU
+* OpenCL triSYCL CPU : Running the Intel OpenCL runtime with the **i7-6700**
+* ComputeCPP : Running the same kernel that ran with *triSYCL OpenMP* but with compute CPP on the CPU throught SPIR and OpenCL
 * OpenMP triSYCL : Running triSYCL without the OpenCL interoperability mode but with OpenMP
 * OpenCL (CPU/CPU) : Running "pure" OpenCL code on the hardware without triSYCL or Boost Compute 
 * NOASYNC: Disable asynchronous execution of kernels
