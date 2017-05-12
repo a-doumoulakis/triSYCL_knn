@@ -102,15 +102,15 @@ void search_image(buffer<int>& training, const Img& img, queue& q) {
 }
 
 int main(int argc, char* argv[]) {
-  training_set = slurp_file("/home/anastasi/Documents/triSYCL_knn/data/trainingsample.csv");
-  validation_set =  slurp_file("/home/anastasi/Documents/triSYCL_knn/data/validationsample.csv");
+  training_set = slurp_file("/home/anastasi/Documents/Development/triSYCL_knn/data/trainingsample.csv");
+  validation_set =  slurp_file("/home/anastasi/Documents/Development/triSYCL_knn/data/validationsample.csv");
   buffer<int> training_buffer = get_buffer(training_set);
-
+ 
   // A SYCL queue to send the heterogeneous work-load to
   queue q;
 
   double sum = 0.0;
-  
+ 
   for(int h = 1; h <= 1000; h++){
     
     auto start_time = std::chrono::high_resolution_clock::now();

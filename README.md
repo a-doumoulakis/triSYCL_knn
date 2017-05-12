@@ -85,11 +85,11 @@ In this part we show the results obtained with different triSYCL modes and OpenC
 
 #### Software Stack
 
-OS : Ubuntu 16.10
-gcc : 6.2.0
-clang : 3.8.1
-computecpp : 0.1.3 CE (fail to compile with 0.2.0 CE)
-OpenCL : Intel OpenCL runtime 4.0.25 and Intel OpenCL SDK
+* OS : Ubuntu 16.10
+* gcc : 6.2.0
+* clang : 3.8.1
+* computecpp : 0.1.3 CE (fail to compile with 0.2.0 CE)
+* OpenCL : Intel OpenCL runtime 4.0.25 and Intel OpenCL SDK
 
 #### Descpription
 
