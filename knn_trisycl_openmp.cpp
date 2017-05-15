@@ -72,7 +72,7 @@ std::vector<Img> slurp_file(const std::string& name) {
 }
 
 int search_image(buffer<int>& training, buffer<int>& res_buffer,
-		 const Img& img, queue& q) {
+                 const Img& img, queue& q) {
 
   {
     buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
@@ -86,7 +86,8 @@ int search_image(buffer<int>& training, buffer<int>& res_buffer,
         auto ka = A.get_access<access::mode::read>(cgh);
         auto kb = res_buffer.get_access<access::mode::write>(cgh);
         // Launch a kernel with training_set_size work-items
-        cgh.parallel_for<class KnnKernel>(range<1> { training_set_size }, [=] (id<1> index) {
+        cgh.parallel_for<class KnnKernel>(range<1> { training_set_size },
+                                          [=] (id<1> index) {
             decltype(ka)::value_type diff = 0;
             // For each pixel
             for (auto i = 0; i != pixel_number; i++) {
@@ -97,15 +98,15 @@ int search_image(buffer<int>& training, buffer<int>& res_buffer,
           });
       });
   }
-  
+
   auto r = res_buffer.get_access<access::mode::read>();
-  
+
   // Find the image with the minimum distance
   int index = 0;
-  for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;    
-  
+  for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;
+
   // Test if we found the good digit
-  return training_set[index].label == img.label; 
+  return training_set[index].label == img.label;
 }
 
 int main(int argc, char* argv[]) {
@@ -113,7 +114,7 @@ int main(int argc, char* argv[]) {
   validation_set =  slurp_file("data/validationsample.csv");
   buffer<int> training_buffer = get_buffer(training_set);
   buffer<int> result_buffer { result, training_set_size };
-  
+
   // A SYCL queue to send the heterogeneous work-load to
   queue q;
 
@@ -123,7 +124,7 @@ int main(int argc, char* argv[]) {
   for(int h = 1; h <= 1000; h++){
 
     auto start_time = std::chrono::high_resolution_clock::now();
-  
+
     // Match each image from the validation set against the images from
     // the training set
     for (auto const & img : validation_set)
@@ -131,16 +132,18 @@ int main(int argc, char* argv[]) {
 
     std::chrono::duration<double, std::milli> duration_ms =
       std::chrono::high_resolution_clock::now() - start_time;
-    
+
     double exec_for_image = (duration_ms.count()/validation_set.size());
 
-    sum += exec_for_image; 
+    sum += exec_for_image;
 
-    std::cout << h/10.0 << "% \t| " << "Duration : " << exec_for_image << " ms/kernel\n";
-    
+    std::cout << h/10.0 << "% \t| " << "Duration : " << exec_for_image
+              << " ms/kernel\n";
+
     std::cout << "\t| Average : " << (sum/h) << "\n"
-              << "\t| Result " << (100.0*correct/validation_set.size()) << "%" << std::endl;
-    
+              << "\t| Result " << (100.0*correct/validation_set.size()) << "%"
+              << std::endl;
+
     std::cout << std::endl;
     correct = 0;
   }

@@ -76,8 +76,8 @@ std::vector<Img> slurp_file(const std::string& name) {
 }
 
 int search_image(buffer<int>& training, buffer<int>& res,
-		 const Img& img, queue& q, const kernel& k) {
-  
+                 const Img& img, queue& q, const kernel& k) {
+
   {
     buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
     // Compute the L2 distance between an image and each one from the
@@ -96,15 +96,15 @@ int search_image(buffer<int>& training, buffer<int>& res,
         cgh.parallel_for(global_size, k);
       });
   }
-  
+
   auto r = res.get_access<access::mode::read>();
-  
+
   // Find the image with the minimum distance
   int index = 0;
-  for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;    
-  
+  for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;
+
   // Test if we found the good digit
-  return training_set[index].label == img.label; 
+  return training_set[index].label == img.label;
 }
 
 int main(int argc, char* argv[]) {
@@ -114,11 +114,11 @@ int main(int argc, char* argv[]) {
   buffer<int> result_buffer { result, training_set_size };
 
   // Device selection
-  std::vector<boost::compute::device> devices = boost::compute::system::devices();
+  auto devices = boost::compute::system::devices();
   boost::compute::device device = devices[DEVICE_NUMBER];
-  
+
   std::cout << "\nUsing " << device.name() << std::endl;
-  
+
   // Boost context and queue to allow us to choose
   // whichever device we want
   boost::compute::context context { device };
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
 
   // A SYCL queue to send the heterogeneous work-load to
   queue q { b_queue };
-  
+
   auto program = boost::compute::program::create_with_source(R"(
     __kernel void kernel_compute(__global const int* trainingSet,
                                  __global const int* data,
@@ -149,32 +149,34 @@ int main(int argc, char* argv[]) {
   // Construct a SYCL kernel from OpenCL kernel to be used in
   // interoperability mode
   kernel k { boost::compute::kernel { program, "kernel_compute"} };
-  
+
   double sum = 0.0;
   int correct = 0;
 
   for(int h = 1; h <= 1000; h++){
-    
+
     auto start_time = std::chrono::high_resolution_clock::now();
-    
+
 
     // Match each image from the validation set against the images from
     // the training set
     for (auto const & img : validation_set)
       correct += search_image(training_buffer, result_buffer, img, q, k);
-    
+
     std::chrono::duration<double, std::milli> duration_ms =
       std::chrono::high_resolution_clock::now() - start_time;
-    
+
     double exec_for_image = (duration_ms.count()/validation_set.size());
 
-    sum += exec_for_image; 
+    sum += exec_for_image;
 
-    std::cout << h/10.0 << "% \t| " << "Duration : " << exec_for_image << " ms/kernel\n";
-    
+    std::cout << h/10.0 << "% \t| " << "Duration : " << exec_for_image
+              << " ms/kernel\n";
+
     std::cout << "\t| Average : " << (sum/h) << "\n"
-              << "\t| Result " << (100.0*correct/validation_set.size()) << "%" << std::endl;
-    
+              << "\t| Result " << (100.0*correct/validation_set.size()) << "%"
+              << std::endl;
+
     std::cout << std::endl;
     correct = 0;
   }

@@ -88,7 +88,8 @@ void search_image(buffer<int>& training, const Img& img, queue& q) {
         auto ka = A.get_access<access::mode::read>(cgh);
         auto kb = res_buffer.get_access<access::mode::discard_write>(cgh);
         // Launch a kernel with training_set_size work-items
-        cgh.parallel_for<class KnnKernel>(range<1> { training_set_size }, [=] (id<1> index) {
+        cgh.parallel_for<class KnnKernel>(range<1> { training_set_size },
+                                          [=] (id<1> index) {
             decltype(ka)::value_type diff = 0;
             // For each pixel
             for (auto i = 0; i != pixel_number; i++) {
@@ -105,14 +106,14 @@ int main(int argc, char* argv[]) {
   training_set = slurp_file("/home/anastasi/Documents/Development/triSYCL_knn/data/trainingsample.csv");
   validation_set =  slurp_file("/home/anastasi/Documents/Development/triSYCL_knn/data/validationsample.csv");
   buffer<int> training_buffer = get_buffer(training_set);
- 
+
   // A SYCL queue to send the heterogeneous work-load to
   queue q;
 
   double sum = 0.0;
- 
+
   for(int h = 1; h <= 1000; h++){
-    
+
     auto start_time = std::chrono::high_resolution_clock::now();
     int correct = 0;
 
@@ -130,13 +131,15 @@ int main(int argc, char* argv[]) {
 
     double exec_for_image = (duration_ms.count()/validation_set.size());
 
-    sum += exec_for_image; 
+    sum += exec_for_image;
 
-    std::cout << h/10.0 << "% | " << "Duration : " << exec_for_image << " ms/kernel\n";
-    
+    std::cout << h/10.0 << "% | " << "Duration : " << exec_for_image
+              << " ms/kernel\n";
+
     std::cout << "     | Average : " << (sum/h) << "\n"
-              << "     | Result " << (100.0*correct/validation_set.size()) << "%" << std::endl;
-    
+              << "     | Result " << (100.0*correct/validation_set.size()) << "%" 
+              << std::endl;
+
     std::cout << std::endl;
     correct = 0;
   }

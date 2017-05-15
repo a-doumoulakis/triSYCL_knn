@@ -66,7 +66,7 @@ std::vector<Img> slurp_file(const std::string& name) {
 }
 
 int compute(cl::Buffer& training, cl::Buffer& data, cl::Buffer& res,
-	    cl::CommandQueue& q,  cl::Kernel& kern, int label) {
+            cl::CommandQueue& q,  cl::Kernel& kern, int label) {
 
   kern.setArg(0, training);
   kern.setArg(1, data);
@@ -75,27 +75,27 @@ int compute(cl::Buffer& training, cl::Buffer& data, cl::Buffer& res,
   kern.setArg(4, 784);
 
   q.enqueueNDRangeKernel(kern, cl::NullRange, cl::NDRange(5000), cl::NullRange);
-  q.finish();  
+  q.finish();
 
   q.enqueueReadBuffer(res, CL_TRUE, 0, sizeof(int) * 5000, result);
-  
+
   // Find the image with the minimum distance
   int index = 0;
   for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;
-    
+
   // Find the image with the minimum distance
   //auto min_image = std::min_element(std::begin(r), std::end(r));
- 
+
   // Test if we found the good digit
-  return training_set[index].label == label; 
+  return training_set[index].label == label;
   }
 
 
 int main(int argc, char* argv[]) {
-  
+
   training_set = slurp_file("data/trainingsample.csv");
   validation_set =  slurp_file("data/validationsample.csv");
-  
+
   std::vector<cl::Platform> platform_list;
   cl::Platform::get(&platform_list);
   if(platform_list.size() == 0) {
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   cl::Platform default_platform = platform_list[DEVICE_NUMBER];
-  
+
   std::vector<cl::Device> device_list;
   default_platform.getDevices(CL_DEVICE_TYPE_ALL, &device_list);
   if(device_list.size() == 0) {
@@ -112,8 +112,9 @@ int main(int argc, char* argv[]) {
   }
   cl::Device default_device = device_list[0];
 
-  std::cout << "\nUsing " << default_device.getInfo<CL_DEVICE_NAME>() << std::endl;
-  
+  std::cout << "\nUsing " << default_device.getInfo<CL_DEVICE_NAME>()
+            << std::endl;
+
   std::cout << std::endl;
 
   cl::Context ctx({ default_device });
@@ -136,7 +137,7 @@ int main(int argc, char* argv[]) {
     }} ";
   src.push_back({kernel_src.c_str(), kernel_src.length()});
 
-  
+
   cl::Program program(ctx, src);
   if(program.build({default_device}) != CL_SUCCESS) {
     std::cout << "Error building the program" << std::endl;
@@ -149,21 +150,21 @@ int main(int argc, char* argv[]) {
 
   std::vector<int> train_vect = get_vector(training_set);
 
-  
+
   cl::Buffer training(ctx, CL_MEM_READ_ONLY,
-		      (sizeof(int) * (training_set_size * data_size)));
+                      (sizeof(int) * (training_set_size * data_size)));
   cl::Buffer data(ctx, CL_MEM_READ_ONLY, (sizeof(int) * data_size));
   cl::Buffer res(ctx, CL_MEM_WRITE_ONLY, (sizeof(int) * training_set_size));
-  
+
   q.enqueueWriteBuffer(training, CL_TRUE, 0,
-		       sizeof(int) * train_vect.size(), train_vect.data());
+                       sizeof(int) * train_vect.size(), train_vect.data());
   int correct = 0;
   double sum = 0.0;
 
   for(int h = 1; h <= 1000; h++){
-  
+
     auto start_time = std::chrono::high_resolution_clock::now();
-  
+
     for(auto const & img : validation_set) {
       q.enqueueWriteBuffer(data, CL_TRUE, 0,
                            sizeof(int) * img.pixels.size(),
@@ -172,16 +173,18 @@ int main(int argc, char* argv[]) {
     }
     std::chrono::duration<double, std::milli> duration_ms =
       std::chrono::high_resolution_clock::now() - start_time;
-    
+
     double exec_for_image = (duration_ms.count()/validation_set.size());
 
-    sum += exec_for_image; 
+    sum += exec_for_image;
 
-    std::cout << h/10.0 << "% \t| " << "Duration : " << exec_for_image << " ms/kernel\n";
-    
+    std::cout << h/10.0 << "% \t| " << "Duration : " << exec_for_image
+              << " ms/kernel\n";
+
     std::cout << "\t| Average : " << (sum/h) << "\n"
-              << "\t| Result " << (100.0*correct/validation_set.size()) << "%" << std::endl;
-    
+              << "\t| Result " << (100.0*correct/validation_set.size()) << "%"
+              << std::endl;
+
     std::cout << std::endl;
     correct = 0;
   }
