@@ -43,7 +43,6 @@ buffer<int> get_buffer(const std::vector<Img>& imgs) {
 // Read a CSV-file containing image pixels
 std::vector<Img> slurp_file(const std::string& name) {
   std::ifstream infile { name, std::ifstream::in };
-  std::cout << "Reading " << name << std::endl;
   std::string line, token;
   std::vector<Img> res;
   bool fst_1 = true;
@@ -69,11 +68,10 @@ std::vector<Img> slurp_file(const std::string& name) {
     }
     res.push_back(img);
   }
-  std::cout << "Done" << std::endl;
   return res;
 }
 
-void search_image(buffer<int>& training, const Img& img, queue& q) {
+int search_image(buffer<int>& training, const Img& img, queue& q) {
   {
     buffer<cl::sycl::cl_int, 1> res_buffer(result, 5000);
     buffer<int> A { std::begin(img.pixels), std::end(img.pixels) };
@@ -100,6 +98,9 @@ void search_image(buffer<int>& training, const Img& img, queue& q) {
           });
       });
   }
+  auto min_image = std::min_element(std::begin(result), std::end(result));
+  return
+    training_set[std::distance(std::begin(result), min_image)].label == img.label;
 }
 
 int main(int argc, char* argv[]) {
@@ -110,20 +111,17 @@ int main(int argc, char* argv[]) {
   // A SYCL queue to send the heterogeneous work-load to
   queue q;
 
+  int correct = 0;
   double sum = 0.0;
 
-  for(int h = 1; h <= 1000; h++){
+  for (int h = 1; h <= 1000; h++){
 
     auto start_time = std::chrono::high_resolution_clock::now();
-    int correct = 0;
 
     // Match each image from the validation set against the images from
     // the training set
     for (auto const & img : validation_set){
-      search_image(training_buffer, img, q);
-      int index = 0;
-      for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;
-      correct += training_set[index].label == img.label;
+      correct += search_image(training_buffer, img, q);
     }
 
     std::chrono::duration<double, std::milli> duration_ms =
@@ -136,8 +134,8 @@ int main(int argc, char* argv[]) {
     std::cout << h/10.0 << "% | " << "Duration : " << exec_for_image
               << " ms/kernel\n";
 
-    std::cout << "     | Average : " << (sum/h) << "\n"
-              << "     | Result " << (100.0*correct/validation_set.size()) << "%" 
+    std::cout << "\t| Average : " << (sum/h) << "\n"
+              << "\t| Result " << (100.0*correct/validation_set.size()) << "%"
               << std::endl;
 
     std::cout << std::endl;

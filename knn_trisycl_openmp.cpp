@@ -102,11 +102,11 @@ int search_image(buffer<int>& training, buffer<int>& res_buffer,
   auto r = res_buffer.get_access<access::mode::read>();
 
   // Find the image with the minimum distance
-  int index = 0;
-  for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;
+  auto min_image = std::min_element(std::begin(result), std::end(result));
 
   // Test if we found the good digit
-  return training_set[index].label == img.label;
+  return
+    training_set[std::distance(std::begin(result), min_image)].label == img.label;
 }
 
 int main(int argc, char* argv[]) {
@@ -118,16 +118,16 @@ int main(int argc, char* argv[]) {
   // A SYCL queue to send the heterogeneous work-load to
   queue q;
 
-  double sum = 0.0;
   int correct = 0;
+  double sum = 0.0;
 
-  for(int h = 1; h <= 1000; h++){
+  for (int h = 1; h <= 1000; h++){
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // Match each image from the validation set against the images from
     // the training set
-    for (auto const & img : validation_set)
+    for (auto const& img : validation_set)
       correct += search_image(training_buffer, result_buffer, img, q);
 
     std::chrono::duration<double, std::milli> duration_ms =

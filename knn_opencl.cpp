@@ -1,3 +1,5 @@
+/* Digit recognition in images using nearest neighbour matching */
+
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -13,12 +15,14 @@
 #define DEVICE_NUMBER 0
 
 constexpr size_t training_set_size = 5000;
-constexpr size_t data_size = 784;
+constexpr size_t pixel_number = 784;
 
-using Vector = std::array<int, data_size>;
+using Vector = std::array<int, pixel_number>;
 
 struct Img {
+  // The digit value [0-9] represented on the image
   int label;
+  // The 1D-linearized image pixels
   Vector pixels;
 };
 
@@ -26,15 +30,16 @@ std::vector<Img> training_set;
 std::vector<Img> validation_set;
 int result[training_set_size];
 
+// Construct a SYCL buffer from a vector of images
 std::vector<int> get_vector(const std::vector<Img>& imgs) {
   std::vector<int> res;
-  for(Img elem : imgs) {
+  for (auto const& elem : imgs) {
     res.insert(res.end(), std::begin(elem.pixels), std::end(elem.pixels));
   }
   return res;
 }
 
-
+// Read a CSV-file containing image pixels
 std::vector<Img> slurp_file(const std::string& name) {
   std::ifstream infile { name, std::ifstream::in };
   std::string line, token;
@@ -42,16 +47,16 @@ std::vector<Img> slurp_file(const std::string& name) {
   bool fst_1 = true;
 
   while (std::getline(infile, line)) {
-    if(fst_1) {
+    if (fst_1) {
       fst_1 = false;
       continue;
     }
     Img img;
-    std::istringstream iss {line };
+    std::istringstream iss { line };
     bool fst = true;
     int index = 0;
-    while(std::getline(iss, token, ',')) {
-      if(fst) {
+    while (std::getline(iss, token, ',')) {
+      if (fst) {
         img.label = std::stoi(token);
         fst = false;
       }
@@ -80,14 +85,11 @@ int compute(cl::Buffer& training, cl::Buffer& data, cl::Buffer& res,
   q.enqueueReadBuffer(res, CL_TRUE, 0, sizeof(int) * 5000, result);
 
   // Find the image with the minimum distance
-  int index = 0;
-  for(int i = 0; i < 5000; i++) if(result[i] < result[index]) index=i;
-
-  // Find the image with the minimum distance
-  //auto min_image = std::min_element(std::begin(r), std::end(r));
+  auto min_image = std::min_element(std::begin(result), std::end(result));
 
   // Test if we found the good digit
-  return training_set[index].label == label;
+  return
+    training_set[std::distance(std::begin(result), min_image)].label == label;
   }
 
 
@@ -152,8 +154,8 @@ int main(int argc, char* argv[]) {
 
 
   cl::Buffer training(ctx, CL_MEM_READ_ONLY,
-                      (sizeof(int) * (training_set_size * data_size)));
-  cl::Buffer data(ctx, CL_MEM_READ_ONLY, (sizeof(int) * data_size));
+                      (sizeof(int) * (training_set_size * pixel_number)));
+  cl::Buffer data(ctx, CL_MEM_READ_ONLY, (sizeof(int) * pixel_number));
   cl::Buffer res(ctx, CL_MEM_WRITE_ONLY, (sizeof(int) * training_set_size));
 
   q.enqueueWriteBuffer(training, CL_TRUE, 0,
@@ -161,11 +163,11 @@ int main(int argc, char* argv[]) {
   int correct = 0;
   double sum = 0.0;
 
-  for(int h = 1; h <= 1000; h++){
+  for (int h = 1; h <= 1000; h++){
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    for(auto const & img : validation_set) {
+    for (auto const& img : validation_set) {
       q.enqueueWriteBuffer(data, CL_TRUE, 0,
                            sizeof(int) * img.pixels.size(),
                            img.pixels.data());
